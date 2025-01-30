@@ -1,0 +1,5 @@
+# IDE's config folders
+.vscode/
+.idea/
+*.iml
+*.iws
