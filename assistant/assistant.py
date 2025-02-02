@@ -10,6 +10,7 @@ from tavily import TavilyClient
 
 from resources.chat_rag import blp as ChatRagBlueprint
 from resources.shopping_advisor import blp as ShoppingAdvisorBlueprint
+from resources.analyze_pdf import blp as AnlyzePDFBlueprint
 
 app = Flask(__name__)
 
@@ -49,3 +50,4 @@ api = Api(app)
 
 api.register_blueprint(ChatRagBlueprint)
 api.register_blueprint(ShoppingAdvisorBlueprint)
+api.register_blueprint(AnlyzePDFBlueprint)
