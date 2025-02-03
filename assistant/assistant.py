@@ -10,6 +10,7 @@ from tavily import TavilyClient
 
 from resources.chat_rag import blp as ChatRagBlueprint
 from resources.shopping_advisor import blp as ShoppingAdvisorBlueprint
+from resources.analyze_pdf import blp as AnlyzePDFBlueprint
 
 app = Flask(__name__)
 
@@ -22,7 +23,7 @@ app.config["OPENAPI_SWAGGER_UI_PATH"] = "/swagger-ui"
 app.config["OPENAPI_SWAGGER_UI_URL"] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
 
 embedder = OpenAIEmbeddings(model="text-embedding-3-small")
-llm = ChatOpenAI(model="gpt-4o-mini")
+llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 
 client = MongoClient(os.environ['MONGODB_URI'])
 
@@ -49,3 +50,4 @@ api = Api(app)
 
 api.register_blueprint(ChatRagBlueprint)
 api.register_blueprint(ShoppingAdvisorBlueprint)
+api.register_blueprint(AnlyzePDFBlueprint)
