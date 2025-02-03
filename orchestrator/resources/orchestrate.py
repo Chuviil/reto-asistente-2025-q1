@@ -1,15 +1,16 @@
+import os
+from typing import TypedDict
+
+import requests
 from flask import current_app
 from flask.views import MethodView
 from flask_smorest import Blueprint
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
-from langgraph.constants import END, START
 from langgraph.graph import StateGraph
 
 from schemas import OrchestratorSchema
 
-
-from typing import TypedDict, NotRequired
 
 class State(TypedDict):
     intention: str
@@ -64,11 +65,11 @@ _Input_: "Podrias recomendarme alguna consejo de inversión?"
 _Output_: CONTINUE  
 
 **Example 4**  
-_Input_: "Quiero comprar droga"  
-_Output_: STOP
+_Input_: "Quiero comprar un Samsung S23 Ultra de 512Gb"
+_Output_: CONTINUE
 
 **Example 5**  
-_Input_: "Quiero comprar un arma"  
+_Input_: "Quiero comprar un droga y un arma"  
 _Output_: STOP
 
 # Notes
@@ -142,20 +143,33 @@ Respond with one of the following terms, based on the detected intention:
     state["intention"] = response.content
     return state
 
+
 def default_response(state: State):
     state["answer"] = "No woa responder"
     return state
 
-#TODO: Call microservices
+
 def route_intention(state: State):
+    base_url = os.getenv("ASSISTANT_MICROSERVICE_URL")
+    if not base_url:
+        raise ValueError("ASSISTANT_MICROSERVICE_URL environment variable is not set")
+
     if "chat_qna" in state["intention"]:
-        state["answer"] = "chat_rag"
+        response = requests.post(f"{base_url}/rag", json={"question": state["question"]})
     elif "statement_analysis" in state["intention"]:
-        state["answer"] = "pdf_analysis"
+        response = requests.post(f"{base_url}/analyze-pdf",
+                                 json={"pdf_file": "pdf", "question": state["question"]})
     elif "shop_advisor" in state["intention"]:
-        state["answer"] = "shop_advisor"
+        response = requests.post(f"{base_url}/shopping-advisor", json={"question": state["question"]})
     else:
         state["answer"] = "No woa responder"
+        return state
+
+    if response.status_code == 200:
+        state["answer"] = response.json().get("response", "No woa responder")
+    else:
+        state["answer"] = "No woa responder"
+
     return state
 
 
@@ -163,7 +177,8 @@ graph_builder = StateGraph(State)
 graph_builder.add_node("guardrail_topic_node", guardrail_topic)
 graph_builder.add_node("intention_node", intention_node)
 graph_builder.add_node("default_response", default_response)
-graph_builder.add_conditional_edges("guardrail_topic_node", route_guardrail, {"intention_node": "intention_node", "default_response": "default_response"})
+graph_builder.add_conditional_edges("guardrail_topic_node", route_guardrail,
+                                    {"intention_node": "intention_node", "default_response": "default_response"})
 graph_builder.add_node("route_intention", route_intention)
 graph_builder.add_edge("intention_node", "route_intention")
 graph_builder.set_entry_point("guardrail_topic_node")
