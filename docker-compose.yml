@@ -1,0 +1,17 @@
+version: '3.8'
+services:
+  orchestrator:
+    build: ./orchestrator
+    ports:
+      - "8080:5000"
+    env_file:
+      - ./orchestrator/config/.env
+    depends_on:
+      - assistant
+
+  assistant:
+    build: ./assistant
+    ports:
+      - "8081:5000"
+    env_file:
+      - ./assistant/config/.env
