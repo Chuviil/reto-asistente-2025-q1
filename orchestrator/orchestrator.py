@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_smorest import Api
 from langchain_openai import ChatOpenAI
+from resources.orchestrate import blp as OrchestratorBlueprint
 
 app = Flask(__name__)
 
@@ -17,3 +18,5 @@ llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 app.config["llm"] = llm
 
 api = Api(app)
+
+api.register_blueprint(OrchestratorBlueprint)
