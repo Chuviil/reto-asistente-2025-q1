@@ -1,22 +1,13 @@
 from flask import Flask
 from flask_smorest import Api
-from langchain_openai import ChatOpenAI
-from resources.orchestrate import blp as OrchestratorBlueprint
+
+from config.config import Config
+from resources.v1.endpoints.orchestrate import blp as orchestrator_blueprint
 
 app = Flask(__name__)
 
-app.config["PROPAGATE_EXCEPTIONS"] = True
-app.config["API_TITLE"] = "Assistant Orchestrator"
-app.config["API_VERSION"] = "v1"
-app.config["OPENAPI_VERSION"] = "3.1.0"
-app.config["OPENAPI_URL_PREFIX"] = "/"
-app.config["OPENAPI_SWAGGER_UI_PATH"] = "/swagger-ui"
-app.config["OPENAPI_SWAGGER_UI_URL"] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
-
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
-
-app.config["llm"] = llm
+app.config.from_object(Config)
 
 api = Api(app)
 
-api.register_blueprint(OrchestratorBlueprint)
+api.register_blueprint(orchestrator_blueprint, url_prefix="/api/v1")
