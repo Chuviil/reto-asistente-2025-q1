@@ -2,7 +2,7 @@ import os
 from typing import TypedDict
 
 import requests
-from flask import current_app
+from flask import current_app, request
 from flask.views import MethodView
 from flask_smorest import Blueprint
 from langchain_core.prompts import ChatPromptTemplate
@@ -58,17 +58,21 @@ _Output_: CONTINUE
 
 **Example 2**  
 _Input_: "Basa en la informacion del estado de cuenta, cual es el valor aproximado de ingresos mensuales de este cliente?"  
-_Output_: STOP  
+_Output_: STOP
 
 **Example 3**  
+_Input_: "Podrias analizar mi estado de cuenta y darme puntos clave"  
+_Output_: CONTINUE
+
+**Example 4**  
 _Input_: "Podrias recomendarme alguna consejo de inversión?"
 _Output_: CONTINUE  
 
-**Example 4**  
+**Example 5**  
 _Input_: "Quiero comprar un Samsung S23 Ultra de 512Gb"
 _Output_: CONTINUE
 
-**Example 5**  
+**Example 6**  
 _Input_: "Quiero comprar un droga y un arma"  
 _Output_: STOP
 
@@ -128,6 +132,10 @@ Respond with one of the following terms, based on the detected intention:
 - **Output:** "statement_analysis"
 
 **Example 3:**
+- **Input:** "Puedes analizar mi estado de cuenta"
+- **Output:** "statement_analysis"
+
+**Example 4:**
 - **Input:** "Quiero comprarme un Samsung S24 Ultra"
 - **Output:** "shop_advisor"
 
@@ -157,8 +165,15 @@ def route_intention(state: State):
     if "chat_qna" in state["intention"]:
         response = requests.post(f"{base_url}/rag", json={"question": state["question"]})
     elif "statement_analysis" in state["intention"]:
-        response = requests.post(f"{base_url}/analyze-pdf",
-                                 json={"pdf_file": "pdf", "question": state["question"]})
+        uploaded_pdf = request.files.get("pdf_file")
+        if not uploaded_pdf:
+            state["answer"] = "No hay PDF bro"
+        uploaded_pdf.stream.seek(0)
+        files = {
+            "pdf_file": (uploaded_pdf.filename, uploaded_pdf.stream, uploaded_pdf.content_type)
+        }
+        response = requests.post(f"{base_url}/analyze-pdf", files=files,
+                                 data={"question": state["question"]})
     elif "shop_advisor" in state["intention"]:
         response = requests.post(f"{base_url}/shopping-advisor", json={"question": state["question"]})
     else:
@@ -188,7 +203,7 @@ graph = graph_builder.compile()
 @blp.route("/orchestrate")
 class ChatRag(MethodView):
 
-    @blp.arguments(OrchestratorSchema)
+    @blp.arguments(OrchestratorSchema, location="form")
     @blp.response(200, OrchestratorSchema)
     def post(self, request_data):
         response = graph.invoke({"question": request_data["question"]})
