@@ -2,28 +2,23 @@ import os
 from typing import TypedDict
 
 import requests
-from flask import current_app, request
-from flask.views import MethodView
-from flask_smorest import Blueprint
+from flask import request
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph
+from langgraph.graph.state import CompiledStateGraph
 
-from schemas import OrchestratorSchema
+from extensions.llm import LLM
 
 
-class State(TypedDict):
+class OrchestratorState(TypedDict):
     intention: str
     question: str
     guardrail_status: str
     answer: str
 
 
-blp = Blueprint("orchestrate", __name__, description="Orchestrator")
-
-
-def guardrail_topic(state: State):
-    llm: ChatOpenAI = current_app.config["llm"]
+def guardrail_topic(state: OrchestratorState):
+    llm = LLM.get_llm()
     chat_template = ChatPromptTemplate(
         [("system",
           """
@@ -89,15 +84,15 @@ _Output_: STOP
     return state
 
 
-def route_guardrail(state: State):
+def route_guardrail(state: OrchestratorState):
     if "CONTINUE" in state["guardrail_status"]:
         return "intention_node"
     else:
         return "default_response"
 
 
-def intention_node(state: State):
-    llm: ChatOpenAI = current_app.config["llm"]
+def intention_node(state: OrchestratorState):
+    llm = LLM.get_llm()
     chat_template = ChatPromptTemplate([
         ("system",
          """
@@ -152,18 +147,18 @@ Respond with one of the following terms, based on the detected intention:
     return state
 
 
-def default_response(state: State):
+def default_response(state: OrchestratorState) -> OrchestratorState:
     state["answer"] = "No woa responder"
     return state
 
 
-def route_intention(state: State):
+def route_intention(state: OrchestratorState):
     base_url = os.getenv("ASSISTANT_MICROSERVICE_URL")
     if not base_url:
         raise ValueError("ASSISTANT_MICROSERVICE_URL environment variable is not set")
 
     if "chat_qna" in state["intention"]:
-        response = requests.post(f"{base_url}/rag", json={"question": state["question"]})
+        response = requests.post(f"{base_url}/api/v1/rag", json={"question": state["question"]})
     elif "statement_analysis" in state["intention"]:
         uploaded_pdf = request.files.get("pdf_file")
         if not uploaded_pdf:
@@ -172,10 +167,10 @@ def route_intention(state: State):
         files = {
             "pdf_file": (uploaded_pdf.filename, uploaded_pdf.stream, uploaded_pdf.content_type)
         }
-        response = requests.post(f"{base_url}/analyze-pdf", files=files,
+        response = requests.post(f"{base_url}/api/v1/analyze-pdf", files=files,
                                  data={"question": state["question"]})
     elif "shop_advisor" in state["intention"]:
-        response = requests.post(f"{base_url}/shopping-advisor", json={"question": state["question"]})
+        response = requests.post(f"{base_url}/api/v1/shopping-advisor", json={"question": state["question"]})
     else:
         state["answer"] = "No woa responder"
         return state
@@ -188,23 +183,17 @@ def route_intention(state: State):
     return state
 
 
-graph_builder = StateGraph(State)
-graph_builder.add_node("guardrail_topic_node", guardrail_topic)
-graph_builder.add_node("intention_node", intention_node)
-graph_builder.add_node("default_response", default_response)
-graph_builder.add_conditional_edges("guardrail_topic_node", route_guardrail,
-                                    {"intention_node": "intention_node", "default_response": "default_response"})
-graph_builder.add_node("route_intention", route_intention)
-graph_builder.add_edge("intention_node", "route_intention")
-graph_builder.set_entry_point("guardrail_topic_node")
-graph = graph_builder.compile()
-
-
-@blp.route("/orchestrate")
-class ChatRag(MethodView):
-
-    @blp.arguments(OrchestratorSchema, location="form")
-    @blp.response(200, OrchestratorSchema)
-    def post(self, request_data):
-        response = graph.invoke({"question": request_data["question"]})
-        return {"response": response["answer"], "question": request_data["question"]}
+def build_orchestrator_graph() -> CompiledStateGraph:
+    graph_builder = StateGraph(OrchestratorState)
+    graph_builder.add_node("guardrail_topic_node", guardrail_topic)
+    graph_builder.add_node("intention_node", intention_node)
+    graph_builder.add_node("default_response", default_response)
+    graph_builder.add_conditional_edges(
+        "guardrail_topic_node",
+        route_guardrail,
+        {"intention_node": "intention_node", "default_response": "default_response"}
+    )
+    graph_builder.add_node("route_intention", route_intention)
+    graph_builder.add_edge("intention_node", "route_intention")
+    graph_builder.set_entry_point("guardrail_topic_node")
+    return graph_builder.compile()
