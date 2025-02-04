@@ -1,15 +1,12 @@
-from flask import current_app
-from flask.views import MethodView
-from flask_smorest import Blueprint
+from typing import TypedDict, List
+
 from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_openai import ChatOpenAI
-from langgraph.graph import START, StateGraph
-from typing_extensions import List, TypedDict
+from langgraph.constants import START
+from langgraph.graph import StateGraph
 
-from schemas import ChatRagSchema
-
-blp = Blueprint("shopping-advisor", __name__, description="Shopping advisor")
+from extensions.llm import LLM
+from extensions.tavily_tool import Tavily
 
 
 class State(TypedDict):
@@ -20,7 +17,7 @@ class State(TypedDict):
 
 
 def extract_product(state: State):
-    llm: ChatOpenAI = current_app.config['llm']
+    llm = LLM.get_llm()
     prompt_template = ChatPromptTemplate([
         ("system",
          """
@@ -64,7 +61,7 @@ Formulate the search query as a single-line sentence in Spanish. Ensure the quer
 
 def search_product(state: State):
     print(f"Se va a buscar: {state['product']}")
-    tavily_client = current_app.config["tavily_client"]
+    tavily_client = Tavily.get_tavily_client()
     search_results = tavily_client.search(state["product"])
     print(f"Resultados de busqueda: {search_results}")
     state["context"] = search_results["results"]
@@ -72,7 +69,7 @@ def search_product(state: State):
 
 
 def analyze_results(state: State):
-    llm: ChatOpenAI = current_app.config['llm']
+    llm = LLM.get_llm()
     prompt_template = ChatPromptTemplate([
         ("system",
          """
@@ -125,16 +122,7 @@ Provide a Markdown table with the following columns:
     return state
 
 
-graph_builder = StateGraph(State).add_sequence([extract_product, search_product, analyze_results])
-graph_builder.add_edge(START, "extract_product")
-graph = graph_builder.compile()
-
-
-@blp.route("/shopping-advisor")
-class ChatRag(MethodView):
-
-    @blp.arguments(ChatRagSchema)
-    @blp.response(200, ChatRagSchema)
-    def post(self, request_data):
-        response = graph.invoke({"question": request_data["question"]})
-        return {"response": response["answer"], "question": request_data["question"]}
+def build_shopping_advisor_graph():
+    graph_builder = StateGraph(State).add_sequence([extract_product, search_product, analyze_results])
+    graph_builder.add_edge(START, "extract_product")
+    return graph_builder.compile()

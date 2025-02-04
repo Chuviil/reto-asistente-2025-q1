@@ -2,15 +2,12 @@ from io import BytesIO
 from typing import TypedDict
 
 import pdfplumber
-from flask import request, current_app
-from flask.views import MethodView
-from flask_smorest import Blueprint
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_openai import ChatOpenAI
 from langgraph.constants import START
 from langgraph.graph import StateGraph
+from langgraph.graph.state import CompiledStateGraph
 
-from schemas import ChatRagSchema
+from extensions.llm import LLM
 
 
 class State(TypedDict):
@@ -59,11 +56,8 @@ def pdf_to_text_with_tables(state: State):
     return state
 
 
-blp = Blueprint("analyze_pdf", __name__, description="Bank Statement analysis")
-
-
 def analyze_bank_statement(state: State):
-    llm: ChatOpenAI = current_app.config['llm']
+    llm = LLM.get_llm()
     prompt_template = ChatPromptTemplate([
         ("system",
          """
@@ -134,23 +128,7 @@ def analyze_bank_statement(state: State):
     return state
 
 
-graph_builder = StateGraph(State).add_sequence([pdf_to_text_with_tables, analyze_bank_statement])
-graph_builder.add_edge(START, "pdf_to_text_with_tables")
-graph = graph_builder.compile()
-
-
-@blp.route("/analyze-pdf")
-class ChatRag(MethodView):
-
-    @blp.arguments(ChatRagSchema, location="form")
-    @blp.response(200, ChatRagSchema)
-    def post(self, request_data):
-        pdf_file = request.files.get("pdf_file")
-        if pdf_file is None:
-            return {"message": "Missing pdf_file in request"}, 400
-
-        pdf_stream = BytesIO(pdf_file.read())
-
-        response = graph.invoke({"pdf_stream": pdf_stream})
-
-        return {"response": response["answer"], "question": request_data["question"]}
+def build_pdf_analyzer_graph() -> CompiledStateGraph:
+    graph_builder = StateGraph(State).add_sequence([pdf_to_text_with_tables, analyze_bank_statement])
+    graph_builder.add_edge(START, "pdf_to_text_with_tables")
+    return graph_builder.compile()
