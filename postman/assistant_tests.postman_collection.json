@@ -1,0 +1,328 @@
+{
+	"info": {
+		"_postman_id": "aef18175-67b2-4787-9db1-896f2439bd2a",
+		"name": "bp_ai_assistant",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "24971147"
+	},
+	"item": [
+		{
+			"name": "RAG",
+			"item": [
+				{
+					"name": "Capacitacion-Norma-Financiera",
+					"item": [
+						{
+							"name": "pregunta_1",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"question\": \"¿Cuáles son los principios fundamentales que deben cumplir las entidades y organizaciones de la Economía Popular y Solidaria (EPS) en el desarrollo de sus actividades?\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{url}}/api/v1/rag",
+									"protocol": "http",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"rag"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "pregunta_2",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"question\": \"¿Qué se entiende por 'bienestar financiero' según la Norma de Educación Financiera y cuáles son sus componentes principales?\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{url}}/api/v1/rag",
+									"protocol": "http",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"rag"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "ed_financiera",
+					"item": [
+						{
+							"name": "pregunta_1",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"question\": \"¿Cuáles son los derechos y obligaciones de los usuarios del sistema financiero según el Programa de Educación Financiera?\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{url}}/api/v1/rag",
+									"protocol": "http",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"rag"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "pregunta_2",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"question\": \"¿Cuáles son las principales diferencias entre la banca de desarrollo y la banca comercial en Ecuador?\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{url}}/api/v1/rag",
+									"protocol": "http",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"rag"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "finanzas_dummies_book",
+					"item": [
+						{
+							"name": "pregunta_1",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"question\": \"Cuáles son los errores financieros más comunes que las personas cometen y cómo pueden evitarlos?\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{url}}/api/v1/rag",
+									"protocol": "http",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"rag"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "pregunta_2",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"question\": \"¿Cuáles son las claves para reducir gastos sin afectar la calidad de vida?\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{url}}/api/v1/rag",
+									"protocol": "http",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"rag"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Analyze-PDF",
+			"item": [
+				{
+					"name": "analyze-pdf",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "question",
+									"value": "\"Analiza este PDF y dime si he gastado en gasolina\"",
+									"type": "text"
+								},
+								{
+									"key": "pdf_file",
+									"type": "file",
+									"src": "/C:/Users/josue/Downloads/Estado de Cuenta DCDIXXXXXXXX2638.pdf"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://{{url}}/api/v1/analyze-pdf",
+							"protocol": "http",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"analyze-pdf"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Shopping-Advisor",
+			"item": [
+				{
+					"name": "shopping-advisor",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"question\": \"Quiero comprar un Samsung S24 Ultra 512gb\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://{{url}}/api/v1/shopping-advisor",
+							"protocol": "http",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"shopping-advisor"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "url",
+			"value": "127.0.0.1:8081",
+			"type": "default"
+		}
+	]
+}
