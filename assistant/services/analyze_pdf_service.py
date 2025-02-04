@@ -13,6 +13,7 @@ from extensions.llm import LLM
 class State(TypedDict):
     pdf_stream: BytesIO
     bank_statement: str
+    question: str
     answer: str
 
 
@@ -61,7 +62,7 @@ def analyze_bank_statement(state: State):
     prompt_template = ChatPromptTemplate([
         ("system",
          """
-         Analyze a bank statement to identify financial trends and patterns. Specifically, extract and list the top 5 biggest individual expenses ordered in descending order, and identify concurrent expenses by establishment to determine the top 3 biggest concurrent expenses. The response should be provided in Spanish.
+         Receive a bank statement and a question regarding it. Analyze the bank statement to identify financial trends and patterns, extract relevant data, and answer the question. Specifically, extract and list the top 5 biggest individual expenses ordered in descending order, and identify concurrent expenses by establishment to determine the top 3 biggest concurrent expenses. Provide a response in Spanish, including an answer to the received question.
 
 # Steps
 
@@ -74,13 +75,17 @@ def analyze_bank_statement(state: State):
    - Calculate the total amount for each group.
    - Sort these grouped expenses in descending order based on total amount.
    - Select the top 3 grouped concurrent expenses.
-4. **Translate and Format in Spanish:** Ensure the final results are formatted in Spanish.
+4. **Answer the Question:**
+   - Analyze the received question about the bank statement.
+   - Use extracted data to formulate a comprehensive answer.
+5. **Translate and Format in Spanish:** Ensure the final results are formatted in Spanish, and organized from greatest to least.
 
 # Output Format
 
 - A list of the top 5 biggest individual expenses.
 - A grouped list of expenses by establishment.
 - The top 3 biggest concurrent (grouped) expenses.
+- A detailed answer to the received question.
 - All outputs should be structured in Spanish without English explanations.
 
 # Examples
@@ -93,6 +98,9 @@ def analyze_bank_statement(state: State):
 - Compra B: 300 USD
 - Compra C: 250 USD
 - Compra D: 100 USD
+
+**Pregunta recibida:**
+- ¿Cuál es el gasto más alto registrado en el extracto bancario?
 
 **Salida esperada (abreviada, los ejemplos reales deben incluir más detalles en español):**
 
@@ -114,15 +122,19 @@ def analyze_bank_statement(state: State):
   2. Compra C: 830 USD
   3. Compra D: 700 USD
 
+- **Respuesta a la pregunta:**
+  - El gasto más alto registrado es Compra D por 700 USD.
+
 # Notes
 
 - Ensure all numerical and monetary values are processed accurately.
 - The names and amounts should be checked for correct groupings before the final evaluation.
+- The answer to the question should be clear, concise, and directly tied to the extracted data.
 - The output must be solely in Spanish and formatted concisely.
          """),
-        ("user", "Bank Statement: {bank_statement}")
+        ("user", "Entrada del extracto bancario: {bank_statement} Pregunta recibida: {question}")
     ])
-    messages = prompt_template.invoke({"bank_statement": state["bank_statement"]})
+    messages = prompt_template.invoke({"bank_statement": state["bank_statement"], "question": state["question"]})
     response = llm.invoke(messages)
     state["answer"] = response.content
     return state
