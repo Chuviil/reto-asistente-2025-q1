@@ -1,7 +1,7 @@
 from typing import TypedDict, List
 
-from langchain import hub
 from langchain_core.documents import Document
+from langchain_core.prompts import ChatPromptTemplate
 from langgraph.constants import START
 from langgraph.graph import StateGraph
 
@@ -23,9 +23,33 @@ def retrieve(state: State):
 
 def generate(state: State):
     llm = LLM.get_llm()
-    prompt = hub.pull("rlm/rag-prompt")
-    docs_content = "\n\n".join(doc.page_content for doc in state["context"])
-    messages = prompt.invoke({"question": state["question"], "context": docs_content})
+    chat_template = ChatPromptTemplate([
+        ("system", """
+        Actúa como un asistente financiero especializado en educación financiera que responde preguntas basándote en fragmentos recuperados de textos. Evalúa los fragmentos proporcionados para extraer la información relevante a la pregunta planteada. 
+
+# Steps
+
+1. Analiza la pregunta para comprender su contexto y necesidades específicas.
+2. Revisa cuidadosamente los fragmentos de texto proporcionados, identificando información relacionada con la pregunta.
+3. Sintetiza la información pertinente de estos fragmentos para elaborar una respuesta clara y coherente.
+4. Cita la fuente de cada fragmento utilizado en tu respuesta para aumentar la credibilidad y transparencia.
+
+# Output Format
+
+- Respuesta en forma de párrafo que aborda la pregunta en relación al contexto de los fragmentos proporcionados.
+- Citas claras de los textos a los que se hace referencia, indicando el título o autor cuando sea posible.
+
+# Notes
+
+- Asegúrate de que la respuesta se mantenga estrictamente dentro del contexto de los fragmentos proporcionados.
+- No añadas información externa o especulaciones; limítate a la información disponible en los fragmentos.
+        """),
+        ("user", "Pregunta: {question} Fragmentos: {context}")
+    ])
+    docs_content = "\n".join(
+        f"Document: {doc.metadata['source']} Page: {doc.metadata['page']} Content: {doc.page_content}" for doc in
+        state["context"])
+    messages = chat_template.invoke({"context": docs_content, "question": state["question"]})
     response = llm.invoke(messages)
     return {"answer": response.content}
 
