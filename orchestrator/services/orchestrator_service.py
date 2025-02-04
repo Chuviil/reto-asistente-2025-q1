@@ -2,12 +2,11 @@ import os
 from typing import TypedDict
 
 import requests
+from extensions.llm import LLM
 from flask import request
 from langchain_core.prompts import ChatPromptTemplate
 from langgraph.graph import StateGraph
 from langgraph.graph.state import CompiledStateGraph
-
-from extensions.llm import LLM
 
 
 class OrchestratorState(TypedDict):
@@ -148,7 +147,13 @@ Respond with one of the following terms, based on the detected intention:
 
 
 def default_response(state: OrchestratorState) -> OrchestratorState:
-    state["answer"] = "No woa responder"
+    state["answer"] = """
+    Agradecemos su consulta. Lamentablemente, en este momento no podemos proporcionarle una respuesta debido a una de las siguientes razones:
+1. La información solicitada no está disponible en nuestra base de datos.
+2. La consulta involucra temas que no están relacionados con asesoramiento financiero.
+3. La solicitud podría implicar información restringida o no permitida por normativas legales.
+Si su consulta está dentro del ámbito financiero, le sugerimos reformularla para que podamos asistirle de la mejor manera posible. Para temas específicos o complejos, le recomendamos contactar con un profesional autorizado en la materia.
+    """
     return state
 
 
