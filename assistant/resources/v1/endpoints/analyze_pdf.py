@@ -24,6 +24,6 @@ class ChatRag(MethodView):
 
         pdf_stream = BytesIO(pdf_file.read())
 
-        response = graph.invoke({"pdf_stream": pdf_stream})
+        response = graph.invoke({"pdf_stream": pdf_stream, "question": request_data["question"]})
 
         return {"response": response["answer"], "question": request_data["question"]}
