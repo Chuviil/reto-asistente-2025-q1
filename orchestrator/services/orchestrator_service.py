@@ -158,7 +158,7 @@ def route_intention(state: OrchestratorState):
         raise ValueError("ASSISTANT_MICROSERVICE_URL environment variable is not set")
 
     if "chat_qna" in state["intention"]:
-        response = requests.post(f"{base_url}/rag", json={"question": state["question"]})
+        response = requests.post(f"{base_url}/api/v1/rag", json={"question": state["question"]})
     elif "statement_analysis" in state["intention"]:
         uploaded_pdf = request.files.get("pdf_file")
         if not uploaded_pdf:
@@ -167,10 +167,10 @@ def route_intention(state: OrchestratorState):
         files = {
             "pdf_file": (uploaded_pdf.filename, uploaded_pdf.stream, uploaded_pdf.content_type)
         }
-        response = requests.post(f"{base_url}/analyze-pdf", files=files,
+        response = requests.post(f"{base_url}/api/v1/analyze-pdf", files=files,
                                  data={"question": state["question"]})
     elif "shop_advisor" in state["intention"]:
-        response = requests.post(f"{base_url}/shopping-advisor", json={"question": state["question"]})
+        response = requests.post(f"{base_url}/api/v1/shopping-advisor", json={"question": state["question"]})
     else:
         state["answer"] = "No woa responder"
         return state
