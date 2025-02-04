@@ -4,9 +4,10 @@ from typing import TypedDict
 import requests
 from flask import request
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph
 from langgraph.graph.state import CompiledStateGraph
+
+from extensions.llm import LLM
 
 
 class OrchestratorState(TypedDict):
@@ -16,10 +17,8 @@ class OrchestratorState(TypedDict):
     answer: str
 
 
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
-
-
 def guardrail_topic(state: OrchestratorState):
+    llm = LLM.get_llm()
     chat_template = ChatPromptTemplate(
         [("system",
           """
@@ -93,6 +92,7 @@ def route_guardrail(state: OrchestratorState):
 
 
 def intention_node(state: OrchestratorState):
+    llm = LLM.get_llm()
     chat_template = ChatPromptTemplate([
         ("system",
          """
