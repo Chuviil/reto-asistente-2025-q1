@@ -74,7 +74,7 @@ def analyze_bank_statement(state: State):
    - Calculate the total amount for each group.
    - Sort these grouped expenses in descending order based on total amount.
    - Select the top 3 grouped concurrent expenses.
-4. **Translate and Format in Spanish:** Ensure the final results are formatted in Spanish.
+4. **Translate and Format in Spanish:** Ensure the final results are formatted in Spanish, and organized from greatest to least.
 
 # Output Format
 
