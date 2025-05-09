@@ -19,6 +19,8 @@ VectorStore.init_app()
 
 api = Api(app)
 
-api.register_blueprint(chat_rag_blueprint, url_prefix="/api/v1")
-api.register_blueprint(shopping_advisor_blueprint, url_prefix="/api/v1")
-api.register_blueprint(analyze_pdf_blueprint, url_prefix="/api/v1")
+API_V1_PREFIX = "/api/v1"
+
+api.register_blueprint(chat_rag_blueprint, url_prefix=API_V1_PREFIX)
+api.register_blueprint(shopping_advisor_blueprint, url_prefix=API_V1_PREFIX)
+api.register_blueprint(analyze_pdf_blueprint, url_prefix=API_V1_PREFIX)
