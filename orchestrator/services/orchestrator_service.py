@@ -9,6 +9,9 @@ from langgraph.graph import StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
 
+DEFAULT_RESPONSE = "Respuesta no permitida."
+
+
 class OrchestratorState(TypedDict):
     intention: str
     question: str
@@ -177,13 +180,13 @@ def route_intention(state: OrchestratorState):
     elif "shop_advisor" in state["intention"]:
         response = requests.post(f"{base_url}/api/v1/shopping-advisor", json={"question": state["question"]})
     else:
-        state["answer"] = "No woa responder"
+        state["answer"] = DEFAULT_RESPONSE
         return state
 
     if response.status_code == 200:
-        state["answer"] = response.json().get("response", "No woa responder")
+        state["answer"] = response.json().get("response", DEFAULT_RESPONSE)
     else:
-        state["answer"] = "No woa responder"
+        state["answer"] = DEFAULT_RESPONSE
 
     return state
 
